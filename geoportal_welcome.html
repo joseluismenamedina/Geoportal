@@ -1,139 +1,18 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bienvenido al Geoportal</title>
+    <title>Geoportal</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .container {
-            text-align: center;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 60px 40px;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            width: 90%;
-        }
-        
-        .logo {
-            font-size: 3em;
-            margin-bottom: 20px;
-            color: #4a5568;
-        }
-        
-        h1 {
-            color: #2d3748;
-            font-size: 2.5em;
-            margin-bottom: 20px;
-            font-weight: 300;
-        }
-        
-        .subtitle {
-            color: #718096;
-            font-size: 1.2em;
-            margin-bottom: 30px;
-            line-height: 1.6;
-        }
-        
-        .features {
-            display: flex;
-            justify-content: space-around;
-            margin: 40px 0;
-            flex-wrap: wrap;
-        }
-        
-        .feature {
-            text-align: center;
-            margin: 10px;
-            flex: 1;
-            min-width: 120px;
-        }
-        
-        .feature-icon {
-            font-size: 2em;
-            margin-bottom: 10px;
-            color: #667eea;
-        }
-        
-        .feature-text {
-            color: #4a5568;
-            font-size: 0.9em;
-        }
-        
-        .cta-button {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 50px;
-            font-size: 1.1em;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-            margin-top: 20px;
-        }
-        
-        .cta-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                padding: 40px 20px;
-            }
-            
-            h1 {
-                font-size: 2em;
-            }
-            
-            .features {
-                flex-direction: column;
-            }
-        }
+        body { font-family: Arial; background: #4CAF50; text-align: center; padding: 50px; }
+        .box { background: white; padding: 30px; border-radius: 10px; display: inline-block; }
+        h1 { color: #333; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="logo">🌍</div>
-        <h1>Bienvenido al Geoportal</h1>
-        <p class="subtitle">
-            Explora, analiza y visualiza información geográfica de manera intuitiva. 
-            Tu ventana al mundo de los datos espaciales.
-        </p>
-        
-        <div class="features">
-            <div class="feature">
-                <div class="feature-icon">🗺️</div>
-                <div class="feature-text">Mapas Interactivos</div>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">📊</div>
-                <div class="feature-text">Análisis Espacial</div>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">🔍</div>
-                <div class="feature-text">Búsqueda Avanzada</div>
-            </div>
-        </div>
-        
-        <a href="#" class="cta-button">Comenzar Exploración</a>
+    <div class="box">
+        <h1>🌍 Bienvenido al Geoportal</h1>
+        <p>Tu portal de información geográfica</p>
+        <button>Ingresar</button>
     </div>
 </body>
 </html>
