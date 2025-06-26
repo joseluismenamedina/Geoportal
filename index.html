@@ -3,81 +3,558 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Geoportal - Bienvenida</title>
+    <title>Geoportal - Sistema de Reportes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .container {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            text-align: center;
-            max-width: 500px;
-            margin: 20px;
-        }
-        
-        h1 {
-            color: #333;
-            font-size: 2.5em;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .subtitle {
-            color: #666;
-            font-size: 1.2em;
-            margin-bottom: 30px;
-            line-height: 1.6;
-        }
-        
-        .map-icon {
-            font-size: 4em;
-            color: #667eea;
-            margin-bottom: 20px;
-        }
-        
-        .welcome-text {
-            background: #f8f9fa;
             padding: 20px;
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
-            margin-top: 20px;
         }
-        
-        .footer {
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(45deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.1) 10px,
+                rgba(255,255,255,0.1) 20px
+            );
+            animation: float 20s linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+            min-height: 600px;
+        }
+
+        .upload-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .upload-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '📊';
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            font-size: 1.1rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3498db;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-upload input[type=file] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-upload-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            border: 3px dashed #3498db;
+            border-radius: 15px;
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+            color: #555;
+        }
+
+        .file-upload-label:hover {
+            border-color: #2980b9;
+            background: linear-gradient(45deg, #e3f2fd, #bbdefb);
+            transform: scale(1.02);
+        }
+
+        .file-upload-label::before {
+            content: '📁';
+            font-size: 2rem;
+            margin-right: 15px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(52, 152, 219, 0.3);
+        }
+
+        .map-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .map-title {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .map-title::before {
+            content: '🗺️';
+            font-size: 1.5rem;
+        }
+
+        #map {
+            height: 450px;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .reports-list {
             margin-top: 30px;
-            color: #888;
-            font-size: 0.9em;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .report-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease;
+        }
+
+        .report-item:hover {
+            transform: translateX(5px);
+        }
+
+        .report-item h4 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .report-item p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-pending { background: #f39c12; }
+        .status-processed { background: #27ae60; }
+        .status-error { background: #e74c3c; }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .header p {
+                font-size: 1rem;
+            }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="map-icon">🗺️</div>
-        <h1>¡Hola Mundo!</h1>
-        <div class="subtitle">
-            Bienvenido a mi <strong>Geoportal</strong>
+        <div class="header">
+            <h1>Geoportal de Reportes</h1>
+            <p>Sistema integrado de gestión y visualización de reportes geoespaciales</p>
         </div>
-        
-        <div class="welcome-text">
-            <p>👋 ¡Saludos desde Ecuador! </p>
-            <p>Este es mi geoportal donde trabajo con datos espaciales, mapas interactivos y análisis geográfico.</p>
-            <p>🌍 Explorando el mundo a través de la geografía y los SIG</p>
-        </div>
-        
-        <div class="footer">
-            <p>Desarrollado con PostGIS y mucho ☕</p>
+
+        <div class="main-content">
+            <div class="upload-section">
+                <h2 class="section-title">Cargar Nuevo Reporte</h2>
+                
+                <form id="reportForm">
+                    <div class="form-group">
+                        <label for="reportTitle">Título del Reporte</label>
+                        <input type="text" id="reportTitle" class="form-control" placeholder="Ingrese el título del reporte" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reportType">Tipo de Reporte</label>
+                        <select id="reportType" class="form-control" required>
+                            <option value="">Seleccione un tipo</option>
+                            <option value="ambiental">Ambiental</option>
+                            <option value="infraestructura">Infraestructura</option>
+                            <option value="social">Social</option>
+                            <option value="emergencia">Emergencia</option>
+                            <option value="urbano">Desarrollo Urbano</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reportDescription">Descripción</label>
+                        <textarea id="reportDescription" class="form-control" rows="4" placeholder="Describa brevemente el contenido del reporte"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="coordinates">Coordenadas (Lat, Lng)</label>
+                        <input type="text" id="coordinates" class="form-control" placeholder="-0.1807, -78.4678 (Quito)" value="-0.1807, -78.4678">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Archivo de Reporte</label>
+                        <div class="file-upload">
+                            <input type="file" id="reportFile" accept=".pdf,.doc,.docx,.xls,.xlsx,.shp,.kml,.geojson" required>
+                            <label for="reportFile" class="file-upload-label">
+                                Seleccionar archivo o arrastrar aquí
+                            </label>
+                        </div>
+                        <small style="color: #666; margin-top: 5px; display: block;">
+                            Formatos soportados: PDF, DOC, XLS, SHP, KML, GeoJSON (Max: 50MB)
+                        </small>
+                    </div>
+
+                    <button type="submit" class="btn">Cargar Reporte</button>
+                </form>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Procesando reporte...</p>
+                </div>
+            </div>
+
+            <div class="map-section">
+                <h2 class="map-title">Mapa de Reportes</h2>
+                <div id="map"></div>
+                
+                <div class="reports-list">
+                    <h3 style="margin-bottom: 15px; color: #2c3e50;">📋 Reportes Recientes</h3>
+                    <div id="reportsList">
+                        <div class="report-item">
+                            <h4><span class="status-indicator status-processed"></span>Análisis Ambiental Centro Histórico</h4>
+                            <p>Reporte sobre calidad del aire - Subido hace 2 horas</p>
+                        </div>
+                        <div class="report-item">
+                            <h4><span class="status-indicator status-pending"></span>Infraestructura Vial Norte</h4>
+                            <p>Evaluación de estado de carreteras - Subido hace 1 día</p>
+                        </div>
+                        <div class="report-item">
+                            <h4><span class="status-indicator status-processed"></span>Desarrollo Urbano La Mariscal</h4>
+                            <p>Planificación territorial - Subido hace 3 días</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js"></script>
+    <script>
+        // Inicializar mapa centrado en Quito
+        const map = L.map('map').setView([-0.1807, -78.4678], 12);
+
+        // Agregar capa de mapa base
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Marcadores de ejemplo
+        const reportMarkers = [
+            { lat: -0.1807, lng: -78.4678, title: "Centro Histórico", type: "ambiental", status: "processed" },
+            { lat: -0.1456, lng: -78.4878, title: "La Mariscal", type: "urbano", status: "processed" },
+            { lat: -0.2156, lng: -78.5012, title: "Sur de Quito", type: "infraestructura", status: "pending" },
+            { lat: -0.1234, lng: -78.4567, title: "Norte", type: "social", status: "processed" }
+        ];
+
+        // Colores por tipo de reporte
+        const typeColors = {
+            ambiental: '#27ae60',
+            infraestructura: '#3498db',
+            social: '#9b59b6',
+            emergencia: '#e74c3c',
+            urbano: '#f39c12'
+        };
+
+        // Agregar marcadores al mapa
+        reportMarkers.forEach(marker => {
+            const icon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="background: ${typeColors[marker.type]}; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>`,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+
+            L.marker([marker.lat, marker.lng], { icon })
+                .bindPopup(`<b>${marker.title}</b><br>Tipo: ${marker.type}<br>Estado: ${marker.status}`)
+                .addTo(map);
+        });
+
+        // Manejar clic en el mapa para obtener coordenadas
+        map.on('click', function(e) {
+            const lat = e.latlng.lat.toFixed(4);
+            const lng = e.latlng.lng.toFixed(4);
+            document.getElementById('coordinates').value = `${lat}, ${lng}`;
+        });
+
+        // Manejar envío del formulario
+        document.getElementById('reportForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const loading = document.getElementById('loading');
+            const form = this;
+            
+            // Mostrar loading
+            loading.style.display = 'block';
+            form.style.display = 'none';
+            
+            // Simular procesamiento
+            setTimeout(() => {
+                // Obtener datos del formulario
+                const title = document.getElementById('reportTitle').value;
+                const type = document.getElementById('reportType').value;
+                const description = document.getElementById('reportDescription').value;
+                const coords = document.getElementById('coordinates').value;
+                const file = document.getElementById('reportFile').files[0];
+                
+                // Agregar a la lista de reportes
+                const reportsList = document.getElementById('reportsList');
+                const newReport = document.createElement('div');
+                newReport.className = 'report-item';
+                newReport.innerHTML = `
+                    <h4><span class="status-indicator status-pending"></span>${title}</h4>
+                    <p>${description || 'Sin descripción'} - Subido ahora</p>
+                `;
+                reportsList.insertBefore(newReport, reportsList.firstChild);
+                
+                // Agregar marcador al mapa si hay coordenadas válidas
+                if (coords) {
+                    const [lat, lng] = coords.split(',').map(c => parseFloat(c.trim()));
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        const icon = L.divIcon({
+                            className: 'custom-marker',
+                            html: `<div style="background: ${typeColors[type] || '#95a5a6'}; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>`,
+                            iconSize: [20, 20],
+                            iconAnchor: [10, 10]
+                        });
+                        
+                        L.marker([lat, lng], { icon })
+                            .bindPopup(`<b>${title}</b><br>Tipo: ${type}<br>Estado: procesando`)
+                            .addTo(map);
+                    }
+                }
+                
+                // Ocultar loading y mostrar formulario
+                loading.style.display = 'none';
+                form.style.display = 'block';
+                form.reset();
+                
+                // Restaurar coordenadas de Quito por defecto
+                document.getElementById('coordinates').value = '-0.1807, -78.4678';
+                
+                alert('✅ Reporte cargado exitosamente');
+                
+            }, 2000);
+        });
+
+        // Manejar drag & drop
+        const fileUpload = document.querySelector('.file-upload-label');
+        const fileInput = document.getElementById('reportFile');
+
+        fileUpload.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#2980b9';
+            this.style.background = 'linear-gradient(45deg, #e3f2fd, #bbdefb)';
+        });
+
+        fileUpload.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#3498db';
+            this.style.background = 'linear-gradient(45deg, #f8f9fa, #e9ecef)';
+        });
+
+        fileUpload.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#3498db';
+            this.style.background = 'linear-gradient(45deg, #f8f9fa, #e9ecef)';
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                updateFileLabel(files[0].name);
+            }
+        });
+
+        fileInput.addEventListener('change', function(e) {
+            if (this.files.length > 0) {
+                updateFileLabel(this.files[0].name);
+            }
+        });
+
+        function updateFileLabel(fileName) {
+            const label = document.querySelector('.file-upload-label');
+            label.innerHTML = `📄 ${fileName}`;
+        }
+    </script>
 </body>
 </html>
