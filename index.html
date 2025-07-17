@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de Estaciones - Completo</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <!-- Agregamos Leaflet CSS y JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         * {
             margin: 0;
@@ -191,6 +194,42 @@
             min-height: 80px;
         }
         
+        /* Estilos para el mapa */
+        #map {
+            height: 400px;
+            width: 100%;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+        }
+        
+        .map-container {
+            margin-bottom: 30px;
+        }
+        
+        .map-title {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #555;
+            font-size: 1.2em;
+        }
+        
+        .station-popup {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 250px;
+        }
+        
+        .station-popup h3 {
+            margin-top: 0;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+        
+        .station-popup p {
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+        
         @media (max-width: 768px) {
             .container {
                 padding: 20px;
@@ -208,12 +247,22 @@
             .location-group {
                 grid-template-columns: 1fr;
             }
+            
+            #map {
+                height: 300px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>📡 Registro de Estaciones - Completo</h1>
+        
+        <!-- Sección del Mapa -->
+        <div class="map-container">
+            <div class="map-title">🗺️ Mapa de Estaciones Registradas</div>
+            <div id="map"></div>
+        </div>
         
         <div id="message" class="message"></div>
         <div id="loading" class="loading">
@@ -222,6 +271,7 @@
         </div>
         
         <form id="estacionForm">
+            <!-- Resto del formulario (sin cambios) -->
             <!-- Sección Información General -->
             <div class="section">
                 <h2>📍 Información General de la Estación</h2>
@@ -273,6 +323,7 @@
                 </div>
             </div>
 
+            <!-- Resto de las secciones del formulario (sin cambios) -->
             <!-- Sección Estructura -->
             <div class="section">
                 <h2>🏗️ Información de Estructura</h2>
@@ -555,6 +606,77 @@
         const { createClient } = supabase;
         const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
+        // Inicializar el mapa
+        let map;
+        let markers = {}; // Objeto para almacenar los marcadores
+
+        // Función para inicializar el mapa
+        function initMap() {
+            // Crear el mapa centrado en Ecuador (coordenadas aproximadas)
+            map = L.map('map').setView([-1.8312, -78.1834], 7);
+            
+            // Añadir capa de OpenStreetMap
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            
+            // Cargar estaciones existentes
+            cargarEstaciones();
+        }
+
+        // Función para cargar estaciones desde Supabase
+        async function cargarEstaciones() {
+            try {
+                const { data: estaciones, error } = await supabaseClient
+                    .from('estaciones')
+                    .select('*');
+                
+                if (error) throw error;
+                
+                // Limpiar marcadores existentes
+                Object.values(markers).forEach(marker => map.removeLayer(marker));
+                markers = {};
+                
+                // Añadir cada estación al mapa
+                estaciones.forEach(estacion => {
+                    agregarEstacionAlMapa(estacion);
+                });
+                
+            } catch (error) {
+                console.error('Error al cargar estaciones:', error);
+                mostrarMensaje('Error al cargar estaciones en el mapa', 'error');
+            }
+        }
+
+        // Función para agregar una estación al mapa
+        function agregarEstacionAlMapa(estacion) {
+            // Crear el contenido del popup
+            const popupContent = `
+                <div class="station-popup">
+                    <h3>${estacion.nombre_estacion}</h3>
+                    <p><strong>Dirección:</strong> ${estacion.direccion}</p>
+                    <p><strong>Tipo:</strong> ${estacion.tipo_estructura}</p>
+                    <p><strong>Altura:</strong> ${estacion.altura_estructura} m</p>
+                    <p><strong>Antenas:</strong> ${estacion.numero_antenas}</p>
+                    <p><strong>Estado:</strong> ${estacion.estado_estructura}</p>
+                </div>
+            `;
+            
+            // Crear el marcador con un icono personalizado
+            const marker = L.marker([estacion.latitud, estacion.longitud], {
+                icon: L.divIcon({
+                    className: 'custom-marker',
+                    html: '📡',
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 30]
+                })
+            }).addTo(map)
+              .bindPopup(popupContent);
+            
+            // Guardar el marcador en el objeto markers
+            markers[estacion.id] = marker;
+        }
+
         // Función para obtener ubicación actual
         function obtenerUbicacion() {
             if (navigator.geolocation) {
@@ -563,6 +685,11 @@
                         document.getElementById('latitud').value = position.coords.latitude;
                         document.getElementById('longitud').value = position.coords.longitude;
                         mostrarMensaje('Ubicación obtenida correctamente', 'success');
+                        
+                        // Centrar el mapa en la ubicación actual
+                        if (map) {
+                            map.setView([position.coords.latitude, position.coords.longitude], 15);
+                        }
                     },
                     function(error) {
                         let mensaje = 'Error al obtener ubicación: ';
@@ -776,6 +903,13 @@
                 mostrarMensaje(mensaje, 'success');
                 document.getElementById('estacionForm').reset();
                 
+                // Actualizar el mapa con la nueva estación
+                const nuevaEstacion = { id: estacionId, ...estacionData };
+                agregarEstacionAlMapa(nuevaEstacion);
+                
+                // Centrar el mapa en la nueva estación
+                map.setView([nuevaEstacion.latitud, nuevaEstacion.longitud], 15);
+                
             } catch (error) {
                 console.error('Error completo:', error);
                 
@@ -795,6 +929,9 @@
         // Verificar conexión al cargar
         window.addEventListener('load', async function() {
             try {
+                // Inicializar el mapa
+                initMap();
+                
                 // Probar conexión a Supabase
                 const { data, error } = await supabaseClient
                     .from('estaciones')
