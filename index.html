@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Estaciones - Completo</title>
+    <title>Geoportal de Estaciones</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <!-- Agregamos Leaflet CSS y JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -17,119 +16,195 @@
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        #map {
+            height: calc(100vh - 8px);
+            width: calc(100% - 8px);
+            margin: 4px;
+            border: 4px solid #2563eb;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.3);
+        }
+        
+        /* Título del mapa */
+        .map-title {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(37, 99, 235, 0.9);
+            color: white;
+            padding: 10px 30px;
+            border-radius: 30px;
+            font-size: 1.5em;
+            font-weight: bold;
+            z-index: 500;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.3);
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Panel flotante del formulario */
+        .form-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 400px;
+            max-height: 90vh;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .form-header {
+            padding: 15px 20px;
+            background: linear-gradient(45deg, #3a4ba8, #5a2d8a);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .form-header h1 {
+            font-size: 1.3em;
+            margin: 0;
+        }
+        
+        .form-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            background: #f0f2f5;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .form-tab {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            font-size: 0.85em;
+            flex: 1;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .form-tab.active {
+            color: #3a4ba8;
+            border-bottom: 3px solid #3a4ba8;
+            background: white;
+        }
+        
+        .form-content {
+            flex: 1;
+            overflow-y: auto;
             padding: 20px;
         }
         
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        .tab-content {
+            display: none;
         }
         
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-            font-size: 2.5em;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .section {
-            margin-bottom: 40px;
-            padding: 25px;
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 15px;
-            border: 1px solid rgba(102, 126, 234, 0.1);
-        }
-        
-        .section h2 {
-            color: #555;
-            margin-bottom: 20px;
-            font-size: 1.3em;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
-        }
-        
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
+        .tab-content.active {
+            display: block;
         }
         
         .form-group {
-            display: flex;
-            flex-direction: column;
+            margin-bottom: 15px;
         }
         
         label {
+            display: block;
             font-weight: 600;
             color: #555;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
             font-size: 0.9em;
         }
         
         input, select, textarea {
-            padding: 12px;
-            border: 2px solid #e1e5e9;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            background: white;
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
         }
         
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-            transform: translateY(-2px);
+            border-color: #3a4ba8;
+            box-shadow: 0 0 0 2px rgba(58, 75, 168, 0.1);
         }
         
         .location-group {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            gap: 10px;
         }
         
-        .submit-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
+        .form-footer {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .btn {
+            padding: 10px 15px;
+            border-radius: 6px;
             border: none;
-            border-radius: 10px;
-            font-size: 18px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 20px;
+            transition: all 0.2s ease;
         }
         
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        .btn-primary {
+            background: linear-gradient(45deg, #3a4ba8, #5a2d8a);
+            color: white;
         }
         
-        .submit-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+        
+        .btn-secondary {
+            background: #e9ecef;
+            color: #495057;
+        }
+        
+        .btn-secondary:hover {
+            background: #dee2e6;
+        }
+        
+        .location-btn {
+            background: #28a745;
+            color: white;
+            padding: 8px 12px;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+        
+        textarea {
+            min-height: 80px;
+            resize: vertical;
         }
         
         .message {
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-weight: 500;
-            text-align: center;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
             display: none;
         }
         
@@ -147,20 +222,21 @@
         
         .loading {
             display: none;
-            text-align: center;
-            color: #667eea;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            color: #3a4ba8;
             font-weight: 600;
         }
         
         .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3a4ba8;
             border-radius: 50%;
-            width: 20px;
-            height: 20px;
+            width: 16px;
+            height: 16px;
             animation: spin 1s linear infinite;
-            display: inline-block;
-            margin-right: 10px;
+            margin-right: 8px;
         }
         
         @keyframes spin {
@@ -168,50 +244,31 @@
             100% { transform: rotate(360deg); }
         }
         
-        .location-btn {
-            background: linear-gradient(45deg, #28a745, #20c997);
+        /* Estilo para el marcador personalizado */
+        .custom-marker {
+            background-color: #2563eb;
+            width: 30px;
+            height: 30px;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
             color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-top: 10px;
-            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
         }
         
-        .location-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
-        }
-        
-        .full-width {
-            grid-column: 1 / -1;
-        }
-        
-        textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-        
-        /* Estilos para el mapa */
-        #map {
-            height: 400px;
-            width: 100%;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            border: 1px solid #ddd;
-        }
-        
-        .map-container {
-            margin-bottom: 30px;
-        }
-        
-        .map-title {
-            text-align: center;
-            margin-bottom: 15px;
-            color: #555;
-            font-size: 1.2em;
+        .custom-marker::after {
+            content: "";
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background-color: #2563eb;
+            bottom: -8px;
+            left: 7px;
+            border-radius: 50%;
+            z-index: -1;
         }
         
         .station-popup {
@@ -221,7 +278,7 @@
         
         .station-popup h3 {
             margin-top: 0;
-            color: #667eea;
+            color: #3a4ba8;
             font-size: 1.1em;
         }
         
@@ -230,52 +287,204 @@
             font-size: 0.9em;
         }
         
+        .toggle-form-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        /* Panel de búsqueda */
+        .search-panel {
+            position: absolute;
+            top: 20px;
+            left: 40px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            width: 250px;
+        }
+        
+        .search-panel input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .search-panel button {
+            width: 100%;
+            padding: 8px;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .search-panel button:hover {
+            background-color: #1d4ed8;
+        }
+        
+        .search-results {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .search-result-item {
+            padding: 5px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .search-result-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        /* Panel de control de capas */
+        .layers-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            width: 250px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .layers-panel h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #3a4ba8;
+            font-size: 1.1em;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        
+        .layer-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .layer-item input {
+            width: auto;
+            margin-right: 10px;
+        }
+        
+        .layer-item label {
+            margin: 0;
+            flex: 1;
+            cursor: pointer;
+        }
+        
         @media (max-width: 768px) {
-            .container {
-                padding: 20px;
-                margin: 10px;
+            .form-panel {
+                width: 90%;
+                right: 5%;
+                max-height: 70vh;
             }
             
-            h1 {
-                font-size: 2em;
+            .toggle-form-btn {
+                display: flex;
             }
             
-            .form-grid {
-                grid-template-columns: 1fr;
+            .form-panel.hidden {
+                transform: translateX(120%);
+            }
+
+            .map-title {
+                font-size: 1.1em;
+                padding: 8px 15px;
+                top: 10px;
             }
             
-            .location-group {
-                grid-template-columns: 1fr;
+            .search-panel {
+                width: 200px;
+                left: 20px;
             }
             
-            #map {
-                height: 300px;
+            .form-tab {
+                padding: 6px 8px;
+                font-size: 0.8em;
+                min-width: 70px;
+            }
+
+            .layers-panel {
+                width: 200px;
+                bottom: 10px;
+                left: 10px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>📡 Registro de Estaciones - Completo</h1>
-        
-        <!-- Sección del Mapa -->
-        <div class="map-container">
-            <div class="map-title">🗺️ Mapa de Estaciones Registradas</div>
-            <div id="map"></div>
+    <!-- Título del Geoportal -->
+    <div class="map-title">GEOPORTAL DE TELECOMUNICACIONES</div>
+    
+    <!-- Panel de búsqueda -->
+    <div class="search-panel">
+        <input type="text" id="searchInput" placeholder="Buscar estación por nombre">
+        <button id="searchBtn">Buscar Estación</button>
+        <div class="search-results" id="searchResults"></div>
+    </div>
+    
+    <!-- Panel de control de capas -->
+    <div class="layers-panel">
+        <h3>Capas Disponibles</h3>
+        <div id="layersContainer"></div>
+    </div>
+    
+    <!-- Mapa con marco azul -->
+    <div id="map"></div>
+    
+    <button id="toggleFormBtn" class="toggle-form-btn">📝</button>
+    
+    <div class="form-panel">
+        <div class="form-header">
+            <h1>📡 Registro de Estaciones</h1>
         </div>
         
-        <div id="message" class="message"></div>
-        <div id="loading" class="loading">
-            <div class="spinner"></div>
-            Enviando datos...
+        <div class="form-tabs">
+            <div class="form-tab active" data-tab="general">General</div>
+            <div class="form-tab" data-tab="estructura">Estructura</div>
+            <div class="form-tab" data-tab="energia">Energía</div>
+            <div class="form-tab" data-tab="ambiental">Ambiental</div>
+            <div class="form-tab" data-tab="postes">Postes</div>
+            <div class="form-tab" data-tab="equipos">Equipos</div>
         </div>
         
-        <form id="estacionForm">
-            <!-- Resto del formulario (sin cambios) -->
-            <!-- Sección Información General -->
-            <div class="section">
-                <h2>📍 Información General de la Estación</h2>
-                <div class="form-grid">
+        <div class="form-content">
+            <form id="estacionForm">
+                <!-- Mensajes y loading -->
+                <div id="message" class="message"></div>
+                <div id="loading" class="loading">
+                    <div class="spinner"></div>
+                    Enviando datos...
+                </div>
+                
+                <!-- Tab General -->
+                <div id="general-tab" class="tab-content active">
                     <div class="form-group">
                         <label for="nombre_estacion">Nombre de la Estación *</label>
                         <input type="text" id="nombre_estacion" name="nombre_estacion" required>
@@ -304,7 +513,7 @@
                         </select>
                     </div>
                     
-                    <div class="form-group full-width">
+                    <div class="form-group">
                         <label>Ubicación GPS *</label>
                         <div class="location-group">
                             <div>
@@ -316,18 +525,14 @@
                                 <input type="number" id="longitud" name="longitud" step="any" required placeholder="Ej: -78.4678">
                             </div>
                         </div>
-                        <button type="button" class="location-btn" onclick="obtenerUbicacion()">
+                        <button type="button" class="btn location-btn" onclick="obtenerUbicacion()">
                             📍 Obtener Ubicación Actual
                         </button>
                     </div>
                 </div>
-            </div>
-
-            <!-- Resto de las secciones del formulario (sin cambios) -->
-            <!-- Sección Estructura -->
-            <div class="section">
-                <h2>🏗️ Información de Estructura</h2>
-                <div class="form-grid">
+                
+                <!-- Tab Estructura -->
+                <div id="estructura-tab" class="tab-content">
                     <div class="form-group">
                         <label for="tipo_estructura">Tipo de Estructura *</label>
                         <select id="tipo_estructura" name="tipo_estructura" required>
@@ -381,12 +586,9 @@
                         </select>
                     </div>
                 </div>
-            </div>
-
-            <!-- Sección Energía -->
-            <div class="section">
-                <h2>⚡ Información de Energía</h2>
-                <div class="form-grid">
+                
+                <!-- Tab Energía -->
+                <div id="energia-tab" class="tab-content">
                     <div class="form-group">
                         <label for="tipo_suministro">Tipo de Suministro *</label>
                         <select id="tipo_suministro" name="tipo_suministro" required>
@@ -430,12 +632,9 @@
                         <input type="number" id="autonomia_respaldo" name="autonomia_respaldo" min="0" step="0.1">
                     </div>
                 </div>
-            </div>
-
-            <!-- Sección Permisos Ambientales -->
-            <div class="section">
-                <h2>🌿 Permisos Ambientales</h2>
-                <div class="form-grid">
+                
+                <!-- Tab Ambiental -->
+                <div id="ambiental-tab" class="tab-content">
                     <div class="form-group">
                         <label for="licencia_ambiental">Licencia Ambiental *</label>
                         <select id="licencia_ambiental" name="licencia_ambiental" required>
@@ -472,17 +671,14 @@
                         </select>
                     </div>
                     
-                    <div class="form-group full-width">
+                    <div class="form-group">
                         <label for="observaciones_ambientales">Observaciones Ambientales</label>
                         <textarea id="observaciones_ambientales" name="observaciones_ambientales" rows="3"></textarea>
                     </div>
                 </div>
-            </div>
-
-            <!-- Sección Postes -->
-            <div class="section">
-                <h2>🔌 Información de Postes</h2>
-                <div class="form-grid">
+                
+                <!-- Tab Postes -->
+                <div id="postes-tab" class="tab-content">
                     <div class="form-group">
                         <label for="numero_postes">Número de Postes *</label>
                         <input type="number" id="numero_postes" name="numero_postes" min="0" required>
@@ -529,17 +725,14 @@
                         </select>
                     </div>
                     
-                    <div class="form-group full-width">
+                    <div class="form-group">
                         <label for="observaciones_postes">Observaciones sobre Postes</label>
                         <textarea id="observaciones_postes" name="observaciones_postes" rows="3"></textarea>
                     </div>
                 </div>
-            </div>
-
-            <!-- Sección Equipos -->
-            <div class="section">
-                <h2>🖥️ Información de Equipos</h2>
-                <div class="form-grid">
+                
+                <!-- Tab Equipos -->
+                <div id="equipos-tab" class="tab-content">
                     <div class="form-group">
                         <label for="marca_equipos">Marca de Equipos</label>
                         <input type="text" id="marca_equipos" name="marca_equipos">
@@ -586,19 +779,23 @@
                         <input type="number" id="nivel_senal" name="nivel_senal" step="0.1">
                     </div>
                     
-                    <div class="form-group full-width">
+                    <div class="form-group">
                         <label for="observaciones_equipos">Observaciones sobre Equipos</label>
                         <textarea id="observaciones_equipos" name="observaciones_equipos" rows="3"></textarea>
                     </div>
                 </div>
-            </div>
-
-            <button type="submit" class="submit-btn">Registrar Información Completa</button>
-        </form>
+            </form>
+        </div>
+        
+        <div class="form-footer">
+            <button type="button" class="btn btn-secondary" id="prevTabBtn">Anterior</button>
+            <button type="button" class="btn btn-primary" id="nextTabBtn">Siguiente</button>
+            <button type="submit" class="btn btn-primary" id="submitBtn" style="display: none;">Registrar</button>
+        </div>
     </div>
 
     <script>
-        // Configuración de Supabase
+        // Configuración de Supabase (sin cambios)
         const supabaseUrl = 'https://hzgaoxczhvjbziydzrni.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh6Z2FveGN6aHZqYnppeWR6cm5pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxMjMwNDgsImV4cCI6MjA2NTY5OTA0OH0.Qpo6KQs1YSEPTPCGrrE3SZZlWKr35IOU5wRBAw65pwA';
         
@@ -606,13 +803,69 @@
         const { createClient } = supabase;
         const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
-        // Inicializar el mapa
+        // Variables para el mapa y marcadores
         let map;
-        let markers = {}; // Objeto para almacenar los marcadores
+        let markers = {};
+        let layerMarkers = {}; // Almacena marcadores por capa
+        
+        // Variables para el manejo de pestañas
+        const tabs = ['general', 'estructura', 'energia', 'ambiental', 'postes', 'equipos'];
+        let currentTab = 0;
+
+        // Función para buscar estaciones por nombre
+        async function buscarEstaciones(nombre) {
+            try {
+                const { data: estaciones, error } = await supabaseClient
+                    .from('estaciones')
+                    .select('*')
+                    .ilike('nombre_estacion', `%${nombre}%`);
+                
+                if (error) throw error;
+                
+                return estaciones;
+            } catch (error) {
+                console.error('Error al buscar estaciones:', error);
+                mostrarMensaje('Error al buscar estaciones', 'error');
+                return [];
+            }
+        }
+
+        // Función para mostrar resultados de búsqueda
+        function mostrarResultados(estaciones) {
+            const resultsContainer = document.getElementById('searchResults');
+            resultsContainer.innerHTML = '';
+            
+            if (estaciones.length === 0) {
+                resultsContainer.innerHTML = '<div class="search-result-item">No se encontraron resultados</div>';
+                resultsContainer.style.display = 'block';
+                return;
+            }
+            
+            estaciones.forEach(estacion => {
+                const item = document.createElement('div');
+                item.className = 'search-result-item';
+                item.textContent = estacion.nombre_estacion;
+                item.addEventListener('click', () => {
+                    // Centrar el mapa en la estación seleccionada
+                    map.setView([estacion.latitud, estacion.longitud], 15);
+                    
+                    // Abrir el popup del marcador
+                    if (markers[estacion.id]) {
+                        markers[estacion.id].openPopup();
+                    }
+                    
+                    // Ocultar resultados
+                    resultsContainer.style.display = 'none';
+                });
+                resultsContainer.appendChild(item);
+            });
+            
+            resultsContainer.style.display = 'block';
+        }
 
         // Función para inicializar el mapa
         function initMap() {
-            // Crear el mapa centrado en Ecuador (coordenadas aproximadas)
+            // Crear el mapa centrado en Ecuador
             map = L.map('map').setView([-1.8312, -78.1834], 7);
             
             // Añadir capa de OpenStreetMap
@@ -622,6 +875,9 @@
             
             // Cargar estaciones existentes
             cargarEstaciones();
+            
+            // Cargar capas disponibles
+            cargarCapasDisponibles();
         }
 
         // Función para cargar estaciones desde Supabase
@@ -675,6 +931,136 @@
             
             // Guardar el marcador en el objeto markers
             markers[estacion.id] = marker;
+        }
+
+        // Función para cargar las tablas disponibles en Supabase
+        async function cargarCapasDisponibles() {
+            try {
+                // Tablas que queremos mostrar como capas
+                const tablas = ['estaciones', 'energia', 'permisos_ambientales', 'postes', 'equipos'];
+                const layersContainer = document.getElementById('layersContainer');
+                layersContainer.innerHTML = '';
+                
+                // Crear un checkbox para cada tabla
+                for (const tabla of tablas) {
+                    const layerItem = document.createElement('div');
+                    layerItem.className = 'layer-item';
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `layer-${tabla}`;
+                    checkbox.value = tabla;
+                    checkbox.addEventListener('change', (e) => toggleLayer(e.target.value, e.target.checked));
+                    
+                    const label = document.createElement('label');
+                    label.htmlFor = `layer-${tabla}`;
+                    label.textContent = tabla.replace(/_/g, ' ').toUpperCase();
+                    
+                    layerItem.appendChild(checkbox);
+                    layerItem.appendChild(label);
+                    layersContainer.appendChild(layerItem);
+                    
+                    // Inicializar el objeto para almacenar marcadores de esta capa
+                    layerMarkers[tabla] = [];
+                }
+                
+            } catch (error) {
+                console.error('Error al cargar capas:', error);
+            }
+        }
+
+        // Función para activar/desactivar una capa
+        async function toggleLayer(tabla, activar) {
+            try {
+                // Si se está desactivando, eliminar los marcadores
+                if (!activar) {
+                    layerMarkers[tabla].forEach(marker => map.removeLayer(marker));
+                    layerMarkers[tabla] = [];
+                    return;
+                }
+                
+                // Si es la tabla de estaciones, cargamos directamente
+                if (tabla === 'estaciones') {
+                    const { data, error } = await supabaseClient
+                        .from(tabla)
+                        .select('*');
+                    
+                    if (error) throw error;
+                    
+                    // Crear marcadores para cada registro con coordenadas
+                    data.filter(registro => registro.latitud && registro.longitud)
+                        .forEach(registro => {
+                            agregarMarcadorCapa(tabla, registro);
+                        });
+                    return;
+                }
+                
+                // Para tablas relacionadas, necesitamos hacer join con estaciones para obtener coordenadas
+                const { data, error } = await supabaseClient
+                    .from(tabla)
+                    .select(`*, estaciones:estacion_id (latitud, longitud, nombre_estacion, direccion)`);
+                
+                if (error) throw error;
+                
+                // Crear marcadores para cada registro que tenga estación asociada con coordenadas
+                data.filter(registro => registro.estaciones && registro.estaciones.latitud && registro.estaciones.longitud)
+                    .forEach(registro => {
+                        // Combinar datos de la tabla con datos de la estación
+                        const registroCompleto = {
+                            ...registro,
+                            latitud: registro.estaciones.latitud,
+                            longitud: registro.estaciones.longitud,
+                            nombre_estacion: registro.estaciones.nombre_estacion,
+                            direccion: registro.estaciones.direccion
+                        };
+                        agregarMarcadorCapa(tabla, registroCompleto);
+                    });
+                
+            } catch (error) {
+                console.error(`Error al cargar capa ${tabla}:`, error);
+                mostrarMensaje(`Error al cargar capa ${tabla}`, 'error');
+            }
+        }
+
+        // Función para agregar un marcador de capa al mapa
+        function agregarMarcadorCapa(tabla, registro) {
+            // Definir iconos diferentes para cada tipo de capa
+            const iconos = {
+                'estaciones': '📡',
+                'energia': '⚡',
+                'permisos_ambientales': '🌿',
+                'postes': '🏗️',
+                'equipos': '💻'
+            };
+            
+            const icono = iconos[tabla] || '📍';
+            
+            // Crear el contenido del popup
+            const popupContent = `
+                <div class="station-popup">
+                    <h3>${registro.nombre_estacion || tabla.replace(/_/g, ' ')}</h3>
+                    <p><strong>Tabla:</strong> ${tabla.replace(/_/g, ' ')}</p>
+                    ${registro.direccion ? `<p><strong>Dirección:</strong> ${registro.direccion}</p>` : ''}
+                    ${registro.tipo_estructura ? `<p><strong>Tipo:</strong> ${registro.tipo_estructura}</p>` : ''}
+                    ${registro.tipo_suministro ? `<p><strong>Suministro:</strong> ${registro.tipo_suministro}</p>` : ''}
+                    ${registro.licencia_ambiental ? `<p><strong>Licencia:</strong> ${registro.licencia_ambiental}</p>` : ''}
+                    ${registro.marca_equipos ? `<p><strong>Marca:</strong> ${registro.marca_equipos}</p>` : ''}
+                </div>
+            `;
+            
+            // Crear el marcador con un icono personalizado
+            const marker = L.marker([registro.latitud, registro.longitud], {
+                icon: L.divIcon({
+                    className: 'custom-marker',
+                    html: icono,
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 30]
+                })
+            }).addTo(map)
+              .bindPopup(popupContent);
+            
+            // Guardar el marcador en el objeto layerMarkers
+            layerMarkers[tabla].push(marker);
         }
 
         // Función para obtener ubicación actual
@@ -731,20 +1117,50 @@
         // Función para mostrar/ocultar loading
         function mostrarLoading(mostrar) {
             const loadingDiv = document.getElementById('loading');
-            const submitBtn = document.querySelector('.submit-btn');
+            const submitBtn = document.getElementById('submitBtn');
             
             if (mostrar) {
-                loadingDiv.style.display = 'block';
+                loadingDiv.style.display = 'flex';
                 submitBtn.disabled = true;
-                submitBtn.textContent = 'Enviando...';
             } else {
                 loadingDiv.style.display = 'none';
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Registrar Información Completa';
             }
         }
 
-        // Función para insertar datos en múltiples tablas
+        // Función para cambiar de pestaña
+        function cambiarTab(index) {
+            // Validar que el índice esté dentro del rango
+            if (index < 0 || index >= tabs.length) return;
+            
+            // Actualizar el tab actual
+            currentTab = index;
+            
+            // Actualizar la visualización de los tabs
+            document.querySelectorAll('.form-tab').forEach((tab, i) => {
+                if (i === index) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            // Actualizar el contenido de los tabs
+            document.querySelectorAll('.tab-content').forEach((content, i) => {
+                if (i === index) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+            
+            // Actualizar botones de navegación
+            document.getElementById('prevTabBtn').style.display = index === 0 ? 'none' : 'block';
+            document.getElementById('nextTabBtn').style.display = index === tabs.length - 1 ? 'none' : 'block';
+            document.getElementById('submitBtn').style.display = index === tabs.length - 1 ? 'block' : 'none';
+        }
+
+        // Función para insertar datos en múltiples tablas (sin cambios)
         async function insertarDatos(estacionId, datos) {
             const resultados = [];
             
@@ -839,7 +1255,7 @@
             }
         }
 
-        // Manejar envío del formulario
+        // Manejar envío del formulario (con cambios mínimos)
         document.getElementById('estacionForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -910,6 +1326,9 @@
                 // Centrar el mapa en la nueva estación
                 map.setView([nuevaEstacion.latitud, nuevaEstacion.longitud], 15);
                 
+                // Volver al primer tab
+                cambiarTab(0);
+                
             } catch (error) {
                 console.error('Error completo:', error);
                 
@@ -925,12 +1344,56 @@
                 mostrarLoading(false);
             }
         });
-        
-        // Verificar conexión al cargar
+
+        // Eventos al cargar la página
         window.addEventListener('load', async function() {
             try {
                 // Inicializar el mapa
                 initMap();
+                
+                // Configurar eventos de los tabs
+                document.querySelectorAll('.form-tab').forEach((tab, index) => {
+                    tab.addEventListener('click', () => cambiarTab(index));
+                });
+                
+                // Configurar botones de navegación
+                document.getElementById('prevTabBtn').addEventListener('click', () => cambiarTab(currentTab - 1));
+                document.getElementById('nextTabBtn').addEventListener('click', () => cambiarTab(currentTab + 1));
+                document.getElementById('submitBtn').addEventListener('click', () => {
+                    document.getElementById('estacionForm').dispatchEvent(new Event('submit'));
+                });
+                
+                // Configurar botón para mostrar/ocultar formulario en móviles
+                document.getElementById('toggleFormBtn').addEventListener('click', () => {
+                    document.querySelector('.form-panel').classList.toggle('hidden');
+                });
+                
+                // Configurar búsqueda de estaciones
+                document.getElementById('searchBtn').addEventListener('click', async () => {
+                    const searchTerm = document.getElementById('searchInput').value.trim();
+                    if (searchTerm) {
+                        const estaciones = await buscarEstaciones(searchTerm);
+                        mostrarResultados(estaciones);
+                    }
+                });
+                
+                // Permitir búsqueda al presionar Enter
+                document.getElementById('searchInput').addEventListener('keypress', async (e) => {
+                    if (e.key === 'Enter') {
+                        const searchTerm = document.getElementById('searchInput').value.trim();
+                        if (searchTerm) {
+                            const estaciones = await buscarEstaciones(searchTerm);
+                            mostrarResultados(estaciones);
+                        }
+                    }
+                });
+                
+                // Ocultar resultados al hacer clic fuera
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.search-panel')) {
+                        document.getElementById('searchResults').style.display = 'none';
+                    }
+                });
                 
                 // Probar conexión a Supabase
                 const { data, error } = await supabaseClient
